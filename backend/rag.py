@@ -16,8 +16,8 @@ CORS(app)
 
 # OpenAI 客户端配置
 client = OpenAI(
-    api_key="sk-c8M121XcCT06LwWNfCGC2vwSjle9kPaCjqtYpbtVhioWS47Y",
-    base_url="https://api2.aigcbest.top/v1",
+    api_key=os.getenv("OPENAI_API_KEY"),
+    base_url=os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
 )
 
 # Neo4j 数据库配置 (请根据实际情况修改)
@@ -195,7 +195,7 @@ def _build_rag_prompt(user_question: str, context: dict) -> str:
     """
     print(f"[Backend] 正在为 '{user_question}' 构建RAG提示词...")
 
-    system_prompt = """You are Scholar Compass, an AI assistant for advisor discovery. 
+    system_prompt = """You are Scholar Compass, an AI assistant for advisor discovery.
 Based *only* on the context provided below (retrieved from our academic graph database), answer the user's query.
 If the context doesn't have the answer, admit it politely.
 Be concise, professional, and factual.
