@@ -2,6 +2,7 @@
 const chatContainer = document.getElementById('chatContainer');
 const messageInput = document.getElementById('messageInput');
 const sendButton = document.getElementById('sendButton');
+const isDemo = document.body.dataset.demo === 'true';
 
 // Store conversation history (for local fallback)
 let conversationHistory = [];
@@ -29,7 +30,7 @@ messageInput.addEventListener('keypress', (e) => {
 document.getElementById('newChatBtn').addEventListener('click', () => {
     sessionId = null;
     conversationHistory = [];
-    chatContainer.innerHTML = `
+    chatContainer.innerHTML = isDemo ? `
         <div class="welcome-message">
             <h2>Explore research directions</h2>
             <p>Try a research interest, compare two advisors, or ask a follow-up.</p>
@@ -39,6 +40,12 @@ document.getElementById('newChatBtn').addEventListener('click', () => {
                 <button type="button" data-prompt="Compare Ava Morgan and Leo Park">Compare advisors</button>
             </div>
             <p class="demo-note">Preview profiles are fictional. The full research graph is not connected here.</p>
+        </div>
+    ` : `
+        <div class="welcome-message">
+            <h2>Welcome! 👋</h2>
+            <p>I'm here to help you find advisors based on your research interests.</p>
+            <p>Ask me about any research topic or field, and I'll help you discover potential advisors!</p>
         </div>
     `;
     console.log('[Session] New chat started - session reset');

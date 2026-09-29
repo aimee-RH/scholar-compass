@@ -1,10 +1,16 @@
+from flask import render_template
+
 from demo_app import app
 
 
 def test_demo_chat():
     client = app.test_client()
     assert client.get("/api/health").json["status"] == "healthy"
-    assert client.get("/").status_code == 200
+    home = client.get("/")
+    assert home.status_code == 200
+    assert b'INTERACTIVE PREVIEW' in home.data
+    with app.test_request_context():
+        assert 'INTERACTIVE PREVIEW' not in render_template('index.html')
     first = client.post("/api/chat", json={"message": "trustworthy AI"}).json
     assert first["demo"] is True and "Ava Morgan" in first["message"]
     follow_up = client.post("/api/chat", json={

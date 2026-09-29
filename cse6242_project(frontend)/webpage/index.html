@@ -267,13 +267,13 @@
         }
     </style>
 </head>
-<body>
+<body data-demo="{{ 'true' if is_demo else 'false' }}">
     <div class="container">
         <div class="header">
             <div style="display: flex; align-items: center; gap: 15px;">
                 <img src="figure/web_logo/compass-svgrepo-com.svg" alt="Scholar Compass logo">
                 <h1>Scholar Compass</h1>
-                <span class="demo-badge">INTERACTIVE PREVIEW</span>
+                {% if is_demo %}<span class="demo-badge">INTERACTIVE PREVIEW</span>{% endif %}
             </div>
             <div class="header-right">
                 <button class="new-chat-btn" id="newChatBtn">New Chat</button>
@@ -282,6 +282,7 @@
 
         <div class="chat-container" id="chatContainer">
             <div class="welcome-message">
+                {% if is_demo %}
                 <h2>Explore research directions</h2>
                 <p>Try a research interest, compare two advisors, or ask a follow-up.</p>
                 <div class="sample-prompts">
@@ -290,6 +291,11 @@
                     <button type="button" data-prompt="Compare Ava Morgan and Leo Park">Compare advisors</button>
                 </div>
                 <p class="demo-note">Preview profiles are fictional. The full research graph is not connected here.</p>
+                {% else %}
+                <h2>Welcome! 👋</h2>
+                <p>I'm here to help you find advisors based on your research interests.</p>
+                <p>Ask me about any research topic or field, and I'll help you discover potential advisors!</p>
+                {% endif %}
             </div>
         </div>
 

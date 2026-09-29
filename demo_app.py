@@ -5,11 +5,11 @@ import re
 from pathlib import Path
 from uuid import uuid4
 
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, render_template, request
 
 
 WEB_DIR = Path(__file__).parent / "cse6242_project(frontend)" / "webpage"
-app = Flask(__name__, static_folder=str(WEB_DIR), static_url_path="")
+app = Flask(__name__, static_folder=str(WEB_DIR), static_url_path="", template_folder=str(WEB_DIR))
 
 ADVISORS = (
     {
@@ -82,7 +82,7 @@ def answer(message, history):
 
 @app.get("/")
 def index():
-    return send_from_directory(WEB_DIR, "index.html")
+    return render_template("index.html", is_demo=True)
 
 
 @app.post("/api/chat")
