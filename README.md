@@ -36,6 +36,16 @@ User question
 
 The active application is in [`cse6242_project(frontend)/webpage`](cse6242_project%28frontend%29/webpage/). The separate [`backend/rag.py`](backend/rag.py) is an earlier Flask RAG service, not the LangGraph application described above.
 
+## Public preview on Replit
+
+The [interactive preview](demo_app.py) runs with four clearly labeled **fictional** advisor profiles. It demonstrates interest matching, advisor comparison, and follow-up questions without requiring API keys, a graph database, or the large BGE-M3 model. It does **not** claim to return real advisor recommendations or the full GraphRAG results described above.
+
+Import this repository at [Replit's GitHub import page](https://replit.com/import). The root [`requirements.txt`](requirements.txt) installs only the preview dependencies, and [`.replit`](.replit) runs the preview on port 5001. Click **Run**, then check `/api/health` and try the prompt buttons. Replit's Publishing tool can publish the same app using the configured deployment command.
+
+To run the preview locally: `python -m pip install -r requirements.txt && python demo_app.py`.
+
+For the full GraphRAG app, use the separate [application requirements](cse6242_project%28frontend%29/webpage/requirements.txt), populate a Neo4j instance with the graph data and embeddings, and configure `NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD`, `NEO4J_DATABASE`, and `ANTHROPIC_API_KEY` as secrets. The full app defaults to CPU embedding (`USE_MPS=false`) and reads `PORT` or `FLASK_PORT` for its HTTP port. Replit's SQL database does not replace Neo4j without a data and query rewrite.
+
 ## Run locally
 
 The main application needs Python, a Neo4j database populated with the project data and embeddings, and an Anthropic API key. The database is not bundled in this repository.

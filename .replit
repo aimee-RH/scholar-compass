@@ -1,0 +1,9 @@
+run = "gunicorn --workers 2 --bind 0.0.0.0:5001 demo_app:app"
+
+[[ports]]
+localPort = 5001
+externalPort = 80
+
+[deployment]
+build = "python -m pip install -r requirements.txt"
+run = "gunicorn --workers 2 --bind 0.0.0.0:5001 demo_app:app"

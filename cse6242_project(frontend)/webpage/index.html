@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advisor Research Interest Finder</title>
+    <title>Scholar Compass — Interactive Preview</title>
     <style>
         * {
             margin: 0;
@@ -51,6 +51,15 @@
         .header h1 {
             font-size: 24px;
             font-weight: 600;
+        }
+
+        .demo-badge {
+            font-size: 12px;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 999px;
+            padding: 5px 9px;
         }
 
         .header-right {
@@ -124,6 +133,7 @@
             padding: 15px 20px;
             border-radius: 18px;
             line-height: 1.6;
+            white-space: pre-line;
             word-wrap: break-word;
         }
 
@@ -228,14 +238,42 @@
             font-size: 16px;
             line-height: 1.8;
         }
+
+        .sample-prompts {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .sample-prompts button {
+            border: 1px solid #c8d2eb;
+            background: white;
+            color: #364780;
+            border-radius: 999px;
+            padding: 10px 14px;
+            cursor: pointer;
+        }
+
+        .sample-prompts button:hover {
+            background: #f1f4ff;
+        }
+
+        .demo-note {
+            margin-top: 22px;
+            font-size: 13px !important;
+            color: #596273;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <div style="display: flex; align-items: center; gap: 15px;">
-                <img src="compass-svgrepo-com.svg" alt="Logo">
+                <img src="figure/web_logo/compass-svgrepo-com.svg" alt="Scholar Compass logo">
                 <h1>Scholar Compass</h1>
+                <span class="demo-badge">INTERACTIVE PREVIEW</span>
             </div>
             <div class="header-right">
                 <button class="new-chat-btn" id="newChatBtn">New Chat</button>
@@ -244,9 +282,14 @@
 
         <div class="chat-container" id="chatContainer">
             <div class="welcome-message">
-                <h2>Welcome! 👋</h2>
-                <p>I'm here to help you find advisors based on your research interests.</p>
-                <p>Ask me about any research topic or field, and I'll help you discover potential advisors!</p>
+                <h2>Explore research directions</h2>
+                <p>Try a research interest, compare two advisors, or ask a follow-up.</p>
+                <div class="sample-prompts">
+                    <button type="button" data-prompt="Who works on trustworthy AI?">Trustworthy AI</button>
+                    <button type="button" data-prompt="I am interested in computer vision for healthcare">Vision + healthcare</button>
+                    <button type="button" data-prompt="Compare Ava Morgan and Leo Park">Compare advisors</button>
+                </div>
+                <p class="demo-note">Preview profiles are fictional. The full research graph is not connected here.</p>
             </div>
         </div>
 

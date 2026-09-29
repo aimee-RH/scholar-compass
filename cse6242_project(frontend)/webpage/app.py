@@ -621,4 +621,8 @@ if __name__ == '__main__':
     print("="*60)
     print("📱 Open your browser: http://localhost:5001")
     print("="*60)
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    app.run(
+        debug=os.getenv("FLASK_DEBUG") == "1",
+        host="0.0.0.0",
+        port=int(os.getenv("PORT", os.getenv("FLASK_PORT", "5001"))),
+    )

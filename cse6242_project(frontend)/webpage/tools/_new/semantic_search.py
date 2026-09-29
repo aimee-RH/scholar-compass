@@ -36,7 +36,7 @@ def _get_embedding_model() -> SentenceTransformer:
     global _embedding_model
     if _embedding_model is None:
         logger.info("[semantic_search] Loading BGE-M3 model (first call, ~3s)")
-        device = "mps" if os.getenv("USE_MPS", "true").lower() == "true" else "cpu"
+        device = "mps" if os.getenv("USE_MPS", "false").lower() == "true" else "cpu"
         _embedding_model = SentenceTransformer("BAAI/bge-m3", device=device)
         logger.info(f"[semantic_search] Model loaded on device: {_embedding_model.device}")
     return _embedding_model

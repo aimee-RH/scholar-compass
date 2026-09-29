@@ -6,13 +6,15 @@ class Neo4jConnector:
     """Neo4j database connection manager"""
 
     def __init__(self):
-        self.uri = "bolt://localhost:7688"
-        self.user = "neo4j"
-        self.password = "academic123"
+        self.uri = os.getenv("NEO4J_URI")
+        self.user = os.getenv("NEO4J_USER", "neo4j")
+        self.password = os.getenv("NEO4J_PASSWORD")
         self.driver = None
 
     def connect(self):
         """Establish database connection"""
+        if not self.uri or not self.password:
+            raise RuntimeError("Set NEO4J_URI and NEO4J_PASSWORD in the environment")
         if not self.driver:
             self.driver = GraphDatabase.driver(
                 self.uri,
@@ -23,7 +25,7 @@ class Neo4jConnector:
     def execute_query(self, query: str, params: Dict[str, Any] = None) -> List[Dict]:
         """Execute Cypher query and return results"""
         driver = self.connect()
-        with driver.session() as session:
+        with driver.session(database=os.getenv("NEO4J_DATABASE", "neo4j")) as session:
             result = session.run(query, params or {})
             return [record.data() for record in result]
 

@@ -11,6 +11,13 @@ let sessionId = null;
 
 // Add event listeners
 sendButton.addEventListener('click', sendMessage);
+chatContainer.addEventListener('click', (event) => {
+    const prompt = event.target.closest('[data-prompt]');
+    if (prompt) {
+        messageInput.value = prompt.dataset.prompt;
+        sendMessage();
+    }
+});
 messageInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -24,9 +31,14 @@ document.getElementById('newChatBtn').addEventListener('click', () => {
     conversationHistory = [];
     chatContainer.innerHTML = `
         <div class="welcome-message">
-            <h2>Welcome! 👋</h2>
-            <p>I'm here to help you find advisors based on your research interests.</p>
-            <p>Ask me about any research topic or field, and I'll help you discover potential advisors!</p>
+            <h2>Explore research directions</h2>
+            <p>Try a research interest, compare two advisors, or ask a follow-up.</p>
+            <div class="sample-prompts">
+                <button type="button" data-prompt="Who works on trustworthy AI?">Trustworthy AI</button>
+                <button type="button" data-prompt="I am interested in computer vision for healthcare">Vision + healthcare</button>
+                <button type="button" data-prompt="Compare Ava Morgan and Leo Park">Compare advisors</button>
+            </div>
+            <p class="demo-note">Preview profiles are fictional. The full research graph is not connected here.</p>
         </div>
     `;
     console.log('[Session] New chat started - session reset');
@@ -69,7 +81,7 @@ async function sendMessage() {
             body: JSON.stringify({
                 message: message,
                 session_id: sessionId,  // CRITICAL: Send session_id to backend
-                history: []  // Let backend fetch history from database
+                history: conversationHistory.slice(0, -1)
             })
         });
 
