@@ -11,7 +11,7 @@ Scholar Compass helps students discover, compare, and analyze research advisors 
 - Claude-powered structured routing and Text2Cypher fallback
 - Fast-path disambiguation without an LLM call
 - Advisor comparison and recommendation tools
-- Evaluation scripts, latency benchmarks, and LangSmith tracing
+- Evaluation runner and a public starter regression set
 
 ## Engineering decisions
 
@@ -22,7 +22,7 @@ Scholar Compass helps students discover, compare, and analyze research advisors 
 | Weak semantic retrieval | Add the BGE-M3 query instruction before encoding | Top-1 similarity improved from 0.33 to 0.82 in the documented CV query |
 | Ambiguous scholars | Present candidates before answering with the wrong author's data | Interactive entity disambiguation |
 
-The documented graph contains **45,009 papers**, **115,627 authors**, and **288,046 authorship relationships**, sourced from [OpenAlex](https://openalex.org/). These figures and performance results are from the project's existing benchmark notes; see the [detailed implementation and evaluation](cse6242_project%28frontend%29/webpage/README.md).
+The documented graph contains **45,009 papers**, **115,627 authors**, and **288,046 authorship relationships**, sourced from [OpenAlex](https://openalex.org/). These figures and the performance results above are historical project notes; the graph data and original 32-case results are not included here, so they cannot be independently reproduced from this repository. A new [public starter benchmark](cse6242_project%28frontend%29/webpage/eval/benchmark.json) is included without precomputed scores.
 
 ## How it works
 
@@ -60,6 +60,8 @@ python app.py
 ```
 
 For the data import scripts and evaluation details, see the [application README](cse6242_project%28frontend%29/webpage/README.md). If you run the earlier `backend/rag.py` service, set its variables from [`backend/.env.example`](backend/.env.example) in your environment. Never commit a populated `.env` file.
+
+Run `python test_demo_app.py` and `python -m unittest -q test_main_app.py test_conversation_store.py` from the repository root for the preview and session regression checks. The session checks use stubbed LLM and database modules; they do not validate a live Neo4j deployment. GitHub Actions runs these checks on pushes and pull requests.
 
 ## Repository map
 

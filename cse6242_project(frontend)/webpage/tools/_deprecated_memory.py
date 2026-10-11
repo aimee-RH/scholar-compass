@@ -163,7 +163,8 @@ def get_session_info(session_id: str) -> Optional[Dict[str, Any]]:
         if not check_result or check_result[0].get("session_exists", 0) == 0:
             return None
     except Exception:
-        return None
+        logger.exception("检查会话失败: session_id=%s", session_id)
+        raise
 
     query = """
     MATCH (s:Session {session_id: $session_id})
@@ -180,7 +181,7 @@ def get_session_info(session_id: str) -> Optional[Dict[str, Any]]:
         return results[0] if results else None
     except Exception:
         logger.exception("获取会话信息失败: session_id=%s", session_id)
-        return None
+        raise
 
 
 def _ensure_session_exists(session_id: str) -> None:
@@ -370,8 +371,8 @@ def get_conversation_history(session_id: str, limit: int = 20) -> List[Dict[str,
             logger.debug("会话不存在，返回空历史: session_id=%s", session_id)
             return []
     except Exception:
-        logger.debug("检查会话失败，返回空历史: session_id=%s", session_id)
-        return []
+        logger.exception("检查会话历史失败: session_id=%s", session_id)
+        raise
 
     query = """
     MATCH (s:Session {session_id: $session_id})-[:HAS_MESSAGE]->(m:Message)
@@ -392,7 +393,7 @@ def get_conversation_history(session_id: str, limit: int = 20) -> List[Dict[str,
         return results
     except Exception:
         logger.exception("获取会话历史失败: session_id=%s", session_id)
-        return []
+        raise
 
 
 def get_last_n_messages(session_id: str, n: int = 5) -> List[Dict[str, Any]]:

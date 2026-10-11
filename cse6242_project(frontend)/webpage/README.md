@@ -70,7 +70,11 @@ Session 持久化（Neo4j Session 节点）
 
 ---
 
-## 🧪 Benchmark 结果
+## 🧪 Benchmark 与公开复现
+
+以下数字是早期项目记录。原始 32-case 数据集、运行结果和 Neo4j 数据库未随仓库提供，因此这些数字不能从公开仓库独立复现。仓库现在提供一个独立的 [5-case 起始回归集](eval/benchmark.json)，不附带预设成绩；它不能替代原始实验。配置好完整应用后，在 `webpage/` 目录运行 `python eval/run_eval.py`，结果写入 `eval/results/`。根目录的自动测试只检查预览、会话 API 和评估集格式，不调用外部模型或数据库。
+
+### 历史记录（未在公开仓库复现）
 
 32 个测试用例，覆盖 21 个 query 类别：
 
@@ -186,8 +190,8 @@ composite_score =
 
 ```bash
 # 1. 克隆仓库
-git clone https://github.com/aimee-RH/cse6242-project.git
-cd cse6242-project/webpage
+git clone https://github.com/aimee-RH/scholar-compass.git
+cd 'scholar-compass/cse6242_project(frontend)/webpage'
 
 # 2. 安装依赖
 pip install -r requirements.txt
@@ -236,7 +240,7 @@ webpage/
 ├── utils/
 │   └── session_store.py      # Neo4j session 持久化
 ├── eval/
-│   ├── benchmark.json        # 32-case 测试集
+│   ├── benchmark.json        # 5-case 公开起始回归集
 │   └── run_eval.py           # 评估脚本
 └── scripts/                  # 数据导入 + 调试脚本
 ```
@@ -251,7 +255,7 @@ webpage/
 | Embedding | BGE-M3 全量向量化（M4 MPS，2h51min）+ 调试 query instruction bug |
 | 路由层 | 统一路由层设计 + Pydantic v2 结构化输出 + 消歧快速路径 |
 | 工具层 | 6 个工具 + LangGraph 状态机接入 |
-| 评估 | 32-case benchmark + LangSmith 可观测性 |
+| 评估 | 公开起始回归集 + 历史 benchmark 记录 |
 
 ---
 

@@ -16,27 +16,12 @@ from graph.graph import graph_app
 from prompts.system_prompt import SYSTEM_PROMPT
 from typing import List, Dict, Any
 
-# 导入记忆管理模块（已废弃，保留旧代码参考）
-# from tools._deprecated_memory import (
-#     create_session,
-#     save_message,
-#     get_conversation_history,
-#     resolve_references,
-#     extract_referenced_authors,
-#     get_session_info
-# )
-
-# 导入事实校验模块（已废弃，保留旧代码参考）
-# from tools._deprecated_fact_checker import fact_check_answer
-
-# 临时占位符，用于兼容代码（4C 清理后这些功能暂时禁用）
-def create_session(*args, **kwargs): return "deprecated_session"
-def save_message(*args, **kwargs): pass
-def get_conversation_history(*args, **kwargs): return []
-def resolve_references(*args, **kwargs): return ""
-def extract_referenced_authors(*args, **kwargs): return []
-def get_session_info(*args, **kwargs): return {}
-def fact_check_answer(*args, **kwargs): return (True, {"summary": "Fact check disabled (4C cleanup)"})
+from tools._deprecated_memory import (
+    create_session,
+    save_message,
+    get_conversation_history,
+    get_session_info,
+)
 
 # 导入 Phase 1 & 2 新模块（保留文件，但 /api/chat 不再使用）
 # from utils.query_rewriter import rewrite_query  # 步骤 4C: 路由层已集成，不再单独调用
@@ -223,10 +208,15 @@ def chat():
     - Neo4j Session 存储 resolved_entities 和 pending_clarification
     """
     try:
-        data = request.json
+        data = request.get_json(silent=True) or {}
+        if not isinstance(data, dict):
+            return jsonify({'error': 'JSON object required', 'success': False}), 400
         user_message = data.get('message', '')
         session_id = data.get('session_id')
-        chat_history = data.get('history', [])
+        if not isinstance(user_message, str) or not user_message.strip() or len(user_message) > 2000:
+            return jsonify({'error': 'message must contain 1-2000 characters', 'success': False}), 400
+        if session_id is not None and (not isinstance(session_id, str) or not session_id):
+            return jsonify({'error': 'invalid session_id', 'success': False}), 400
 
         print(f"\n{'='*60}")
         print(f"[API] /api/chat called (路由层集成版本)")
@@ -239,10 +229,8 @@ def chat():
             session_id = create_session(user_id="default_user")
             print(f"[Memory] 创建新会话: {session_id[:8]}...")
 
-        session_info = get_session_info(session_id)
-        if not session_info:
-            session_id = create_session(user_id="default_user")
-            print(f"[Memory] Session无效，创建新会话: {session_id[:8]}...")
+        if not get_session_info(session_id):
+            return jsonify({'error': 'Session not found', 'success': False}), 404
 
         # === Step 2: 从 Neo4j 加载 routing state ===
         print(f"[SessionStore] 加载 routing state...")
@@ -253,14 +241,7 @@ def chat():
         print(f"[SessionStore] 待消歧: {pending_clarification.entity_name if pending_clarification else 'None'}")
 
         # === Step 3: 获取对话历史（用于 LangGraph） ===
-        if not chat_history:
-            db_history = get_conversation_history(session_id, limit=10)
-            if db_history:
-                chat_history = [
-                    {'role': msg['role'], 'content': msg['content']}
-                    for msg in db_history
-                ]
-                print(f"[Memory] 加载 {len(chat_history)} 条历史消息")
+        chat_history = get_conversation_history(session_id, limit=10)
 
         # 构建历史消息列表（LangChain 格式）
         history_messages = []
@@ -312,7 +293,7 @@ def chat():
         save_message(session_id, response_text, "assistant")
         print(f"[Memory] 消息已保存到会话: {session_id[:8]}...")
 
-        # === Step 10: 事实校验（保留原有逻辑，从 routing_decision 提取实体） ===
+        # === Step 10: 提取路由元数据 ===
         routing_decision = result.get("routing_decision")
         referenced_authors = []
         if routing_decision and routing_decision.entities:
@@ -320,31 +301,6 @@ def chat():
                 a.name for a in routing_decision.entities.authors
                 if a.author_id  # 只取已解析的作者
             ]
-
-        fact_check_enabled = os.getenv("ENABLE_FACT_CHECK", "true").lower() == "true"
-        fact_check_result = None
-
-        if fact_check_enabled and referenced_authors:
-            try:
-                print(f"[FactCheck] 开始事实校验...")
-                is_factual, report = fact_check_answer(
-                    answer=response_text,
-                    referenced_scholars=referenced_authors,
-                    strict_mode=False
-                )
-
-                fact_check_result = {
-                    "is_factual": is_factual,
-                    "summary": report.get("summary", ""),
-                    "accuracy_rate": report.get("accuracy_rate", ""),
-                    "verified_count": report.get("verified_count", 0),
-                    "fact_count": report.get("fact_count", 0)
-                }
-
-                print(f"[FactCheck] 校验完成: {report.get('summary')}")
-
-            except Exception as e:
-                print(f"[FactCheck] 校验失败: {str(e)}")
 
         # === Step 11: 构建响应数据 ===
         # 提取路由层元数据
@@ -364,20 +320,6 @@ def chat():
                     "has_coreference": has_coreference,
                     "ambiguity_reason": routing_decision.ambiguity_reason,
                     "routing_confidence": routing_decision.routing_confidence
-                }
-            })
-
-        # Fact Check 的 reasoning（如果有）
-        if fact_check_result and fact_check_result.get('summary'):
-            reasoning_blocks.append({
-                "step": "fact_checking",
-                "description": "事实校验",
-                "reasoning": fact_check_result.get('summary'),
-                "details": {
-                    "is_factual": fact_check_result.get('is_factual'),
-                    "accuracy_rate": fact_check_result.get('accuracy_rate'),
-                    "verified_count": fact_check_result.get('verified_count'),
-                    "fact_count": fact_check_result.get('fact_count')
                 }
             })
 
@@ -402,9 +344,6 @@ def chat():
                 'pending_clarification': new_pending_clarification.entity_name if new_pending_clarification else None
             }
         }
-
-        if fact_check_result is not None:
-            response_data['fact_check'] = fact_check_result
 
         return jsonify(response_data)
 
@@ -431,13 +370,21 @@ def get_history():
     """
     try:
         session_id = request.args.get('session_id')
-        limit = int(request.args.get('limit', 20))
+        try:
+            limit = int(request.args.get('limit', 20))
+        except ValueError:
+            return jsonify({'error': 'limit must be between 1 and 100', 'success': False}), 400
 
         if not session_id:
             return jsonify({
                 'error': 'session_id parameter is required',
                 'success': False
             }), 400
+
+        if not 1 <= limit <= 100:
+            return jsonify({'error': 'limit must be between 1 and 100', 'success': False}), 400
+        if not get_session_info(session_id):
+            return jsonify({'error': 'Session not found', 'success': False}), 404
 
         print(f"[API] /api/history called for session: {session_id[:8] if session_id else 'None'}...")
 
@@ -450,7 +397,7 @@ def get_history():
             formatted_history.append({
                 'role': msg['role'],
                 'content': msg['content'],
-                'created_at': msg.get('created_at'),
+                'created_at': str(msg['created_at']) if msg.get('created_at') else None,
                 'referenced_authors': msg.get('referenced_authors', [])
             })
 
@@ -484,9 +431,14 @@ def create_new_session():
         JSON响应，包含新创建的session_id
     """
     try:
-        data = request.json
+        data = request.get_json(silent=True) or {}
+        if not isinstance(data, dict):
+            return jsonify({'error': 'JSON object required', 'success': False}), 400
         user_id = data.get('user_id', 'default_user')
         metadata = data.get('metadata', {})
+
+        if not isinstance(user_id, str) or not user_id or not isinstance(metadata, dict):
+            return jsonify({'error': 'invalid session details', 'success': False}), 400
 
         session_id = create_session(user_id=user_id, metadata=metadata)
 
@@ -527,7 +479,8 @@ def get_session_details(session_id):
 
         return jsonify({
             'success': True,
-            'session': session_info
+            'session': {key: str(value) if key in ('created_at', 'updated_at') and value else value
+                        for key, value in session_info.items()}
         })
 
     except Exception as e:
@@ -546,7 +499,6 @@ def health_check():
         JSON响应，包含各服务的健康状态
     """
     from datetime import datetime
-    from tools import TOOLS
 
     health_status = {
         'status': 'healthy',
@@ -565,7 +517,7 @@ def health_check():
         health_status['status'] = 'degraded'
 
     # 检查LLM配置
-    api_key = os.getenv("MINIMAX_API_KEY") or os.getenv("OPENAI_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
+    api_key = os.getenv("ANTHROPIC_API_KEY")
     if api_key:
         health_status['services']['llm'] = 'configured'
     else:
@@ -575,9 +527,8 @@ def health_check():
     # 检查工具注册（新工具在 tools/_new/ 下，通过 handler 直接调用）
     health_status['services']['tools'] = 'routing_layer_active (4C cleanup)'
 
-    # 检查功能模块（已废弃，保留健康检查字段）
-    health_status['services']['memory'] = 'deprecated (4C cleanup)'
-    health_status['services']['fact_checker'] = 'deprecated (4C cleanup)'
+    # 会话和消息使用 Neo4j 持久化
+    health_status['services']['memory'] = 'neo4j'
 
     # 根据状态返回相应的HTTP状态码
     status_code = 200 if health_status['status'] == 'healthy' else 503

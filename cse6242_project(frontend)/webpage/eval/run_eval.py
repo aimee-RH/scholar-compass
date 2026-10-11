@@ -154,8 +154,20 @@ def run_single_case(case: Dict, graph_app) -> Dict:
                 predicted["predicted_top1_score"] = float(score_match.group(1))
 
     # 判断是否走了快速路径（elapsed < 100ms 视为快速路径）
-    if predicted["elapsed_ms"] < 100:
-        predicted["actual_fast_path"] = True
+    predicted["actual_fast_path"] = predicted["elapsed_ms"] < 100
+
+    checks = {}
+    for expected_key, actual_key in (
+        ("expected_task_type", "predicted_task_type"),
+        ("expected_ambiguity_reason", "predicted_ambiguity_reason"),
+        ("expected_fast_path", "actual_fast_path"),
+    ):
+        if expected_key in predicted:
+            checks[expected_key] = predicted[expected_key] == predicted.get(actual_key)
+    if "expected_max_elapsed_ms" in predicted:
+        checks["expected_max_elapsed_ms"] = predicted["elapsed_ms"] <= predicted["expected_max_elapsed_ms"]
+    predicted["checks"] = checks
+    predicted["passed"] = error is None and all(checks.values())
 
     return predicted
 
@@ -169,6 +181,7 @@ def print_report(results: List[Dict], report: Dict):
     print(f"\n📝 Total Cases: {len(results)}")
     errors = [r for r in results if r.get("error")]
     print(f"❌ Errors: {len(errors)}")
+    print(f"✅ Regression cases passed: {sum(r['passed'] for r in results)}/{len(results)}")
 
     # 1. Task Classification
     tc = report["task_classification"]
@@ -239,10 +252,10 @@ def print_report(results: List[Dict], report: Dict):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--benchmark", default="eval/benchmark.json")
+    parser.add_argument("--benchmark", default=str(Path(__file__).with_name("benchmark.json")))
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--category", type=str, default=None, help="Filter by category")
-    parser.add_argument("--output", default=None, help="Output JSON path (default: eval/results/.json)")
+    parser.add_argument("--output", default=None, help="Output JSON path (default: eval/results/eval_<timestamp>.json)")
     args = parser.parse_args()
 
     load_dotenv()
@@ -295,9 +308,10 @@ def main():
     if args.output:
         output_path = Path(args.output)
     else:
-        Path("eval/results").mkdir(exist_ok=True, parents=True)
+        results_dir = Path(__file__).parent / "results"
+        results_dir.mkdir(exist_ok=True, parents=True)
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_path = Path(f"eval/results/eval_{ts}.json")
+        output_path = results_dir / f"eval_{ts}.json"
 
     output_data = {
         "metadata": {

@@ -8,7 +8,30 @@ const isDemo = document.body.dataset.demo === 'true';
 let conversationHistory = [];
 
 // Store session ID for multi-turn conversation
-let sessionId = null;
+let sessionId = isDemo ? null : sessionStorage.getItem('scholarCompassSessionId');
+
+// Restore the persisted conversation after a page reload.
+if (sessionId && !isDemo) {
+    const restoringSessionId = sessionId;
+    fetch(`/api/history?session_id=${encodeURIComponent(sessionId)}`)
+        .then((response) => {
+            if (!response.ok) throw new Error('Session unavailable');
+            return response.json();
+        })
+        .then((data) => {
+            if (sessionId !== restoringSessionId || conversationHistory.length) return;
+            conversationHistory = data.history.map(({ role, content }) => ({ role, content }));
+            if (conversationHistory.length) {
+                chatContainer.querySelector('.welcome-message')?.remove();
+                conversationHistory.forEach(({ role, content }) => addMessage(content, role));
+            }
+        })
+        .catch(() => {
+            if (sessionId !== restoringSessionId) return;
+            sessionId = null;
+            sessionStorage.removeItem('scholarCompassSessionId');
+        });
+}
 
 // Add event listeners
 sendButton.addEventListener('click', sendMessage);
@@ -29,6 +52,7 @@ messageInput.addEventListener('keypress', (e) => {
 // New Chat button - reset session
 document.getElementById('newChatBtn').addEventListener('click', () => {
     sessionId = null;
+    sessionStorage.removeItem('scholarCompassSessionId');
     conversationHistory = [];
     chatContainer.innerHTML = isDemo ? `
         <div class="welcome-message">
@@ -105,6 +129,7 @@ async function sendMessage() {
             // CRITICAL: Save session_id from backend response
             if (data.session_id) {
                 sessionId = data.session_id;
+                if (!isDemo) sessionStorage.setItem('scholarCompassSessionId', sessionId);
                 console.log('[Session] Session ID saved:', sessionId.substring(0, 8) + '...');
             }
 

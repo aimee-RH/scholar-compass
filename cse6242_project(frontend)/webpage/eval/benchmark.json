@@ -1,0 +1,46 @@
+{
+  "metadata": {
+    "version": "public-starter-1",
+    "description": "Small public regression set. Run against a populated Neo4j graph and an Anthropic API key; no scores are precomputed."
+  },
+  "test_cases": [
+    {
+      "id": "missing_context",
+      "category": "clarification",
+      "query": "他最近发表了什么论文？",
+      "expected_task_type": "CLARIFICATION_NEEDED",
+      "expected_ambiguity_reason": "missing_context"
+    },
+    {
+      "id": "duplicate_author",
+      "category": "clarification",
+      "query": "查询 Yao Xie 的 top 5 高被引论文",
+      "expected_task_type": "CLARIFICATION_NEEDED",
+      "expected_ambiguity_reason": "multiple_author_candidates"
+    },
+    {
+      "id": "select_candidate",
+      "category": "clarification_fast_path",
+      "query": "1",
+      "pending_clarification": {
+        "entity_name": "Yao Xie",
+        "candidates_count": 2
+      },
+      "expected_task_type": "CLARIFICATION_NEEDED",
+      "expected_fast_path": true,
+      "expected_max_elapsed_ms": 100
+    },
+    {
+      "id": "semantic_topic",
+      "category": "semantic_search",
+      "query": "Find papers about federated learning and privacy",
+      "expected_task_type": "SEMANTIC_SEARCH"
+    },
+    {
+      "id": "advisor_recommendation",
+      "category": "analysis",
+      "query": "推荐做 computer vision 方向的导师",
+      "expected_task_type": "ANALYSIS"
+    }
+  ]
+}

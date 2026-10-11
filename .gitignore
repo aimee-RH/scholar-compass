@@ -14,6 +14,7 @@ neostore*
 # --- Data Files ---
 **/*.csv
 **/*.json
+!cse6242_project(frontend)/webpage/eval/benchmark.json
 **/*.parquet
 data/
 
