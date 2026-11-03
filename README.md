@@ -38,7 +38,7 @@ The active application is in [`cse6242_project(frontend)/webpage`](cse6242_proje
 
 ## Public preview on Replit
 
-The [interactive preview](demo_app.py) runs with four clearly labeled **fictional** advisor profiles. It demonstrates interest matching, advisor comparison, and follow-up questions without requiring API keys, a graph database, or the large BGE-M3 model. It does **not** claim to return real advisor recommendations or the full GraphRAG results described above.
+The [interactive preview](demo_app.py) runs with four clearly labeled **fictional** advisor profiles. Its web interface offers one-click research prompts, advisor cards, comparison, and follow-up questions without requiring API keys, a graph database, or the large BGE-M3 model. The sample API returns structured profile data so the cards reflect the same answer as the conversation. It does **not** claim to return real advisor recommendations or the full GraphRAG results described above.
 
 Import this repository at [Replit's GitHub import page](https://replit.com/import). The root [`requirements.txt`](requirements.txt) installs only the preview dependencies, and [`.replit`](.replit) runs the preview on port 5001. Click **Run**, then check `/api/health` and try the prompt buttons. Replit's Publishing tool can publish the same app using the configured deployment command.
 

@@ -39,7 +39,7 @@ ADVISORS = (
 )
 
 
-def answer(message, history):
+def find_advisors(message, history):
     query = message.casefold()
     named = [advisor for advisor in ADVISORS if advisor["name"].casefold() in query]
 
@@ -52,27 +52,36 @@ def answer(message, history):
         if index < len(listed):
             named = [advisor for advisor in ADVISORS if advisor["name"] == listed[index]]
 
-    if len(named) >= 2:
-        return "Illustrative comparison (fictional profiles):\n" + "\n".join(
-            f"• {advisor['name']} — {advisor['focus']}. {advisor['approach']}"
-            for advisor in named[:2]
-        ) + "\nChoose based on the research question and methods you want to explore."
-
     if named:
-        advisor = named[0]
-        return (f"Illustrative profile — {advisor['name']} (fictional)\n"
-                f"Focus: {advisor['focus']}.\nApproach: {advisor['approach']}\n"
-                "In the full product, this would link to verified publications and graph evidence.")
+        return "named", named[:2]
 
     scored = sorted(
         ((sum(topic in query for topic in advisor["topics"]), advisor) for advisor in ADVISORS),
         key=lambda item: item[0], reverse=True,
     )
-    matches = [advisor for score, advisor in scored if score > 0][:2]
-    if matches:
+    best_score = scored[0][0]
+    return "matches", [advisor for score, advisor in scored if score == best_score and score > 0][:2]
+
+
+def answer(message, history, selection=None):
+    kind, advisors = selection or find_advisors(message, history)
+
+    if kind == "named" and len(advisors) >= 2:
+        return "Illustrative comparison (fictional profiles):\n" + "\n".join(
+            f"• {advisor['name']} — {advisor['focus']}. {advisor['approach']}"
+            for advisor in advisors
+        ) + "\nChoose based on the research question and methods you want to explore."
+
+    if kind == "named":
+        advisor = advisors[0]
+        return (f"Illustrative profile — {advisor['name']} (fictional)\n"
+                f"Focus: {advisor['focus']}.\nApproach: {advisor['approach']}\n"
+                "In the full product, this would link to verified publications and graph evidence.")
+
+    if advisors:
         return "Illustrative matches (fictional profiles):\n" + "\n".join(
             f"{number}. {advisor['name']} — {advisor['focus']}. {advisor['approach']}"
-            for number, advisor in enumerate(matches, 1)
+            for number, advisor in enumerate(advisors, 1)
         ) + "\nAsk about a name or say ‘tell me about the first one’."
 
     return ("Try a research interest such as trustworthy AI, computer vision in healthcare, "
@@ -94,9 +103,12 @@ def chat():
     history = data.get("history")
     history = history[-12:] if isinstance(history, list) else []
     session_id = data.get("session_id")
+    selection = find_advisors(message.strip(), history)
     return jsonify(
         success=True,
-        message=answer(message.strip(), history),
+        message=answer(message.strip(), history, selection),
+        advisors=[{key: advisor[key] for key in ("name", "focus", "approach")}
+                  for advisor in selection[1]],
         session_id=session_id if isinstance(session_id, str) and session_id else str(uuid4()),
         demo=True,
     )

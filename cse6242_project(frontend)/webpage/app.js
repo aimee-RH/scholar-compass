@@ -1,199 +1,141 @@
-// Chat application logic
 const chatContainer = document.getElementById('chatContainer');
 const messageInput = document.getElementById('messageInput');
 const sendButton = document.getElementById('sendButton');
 const isDemo = document.body.dataset.demo === 'true';
-
-// Store conversation history (for local fallback)
+const welcomeMarkup = chatContainer.innerHTML;
 let conversationHistory = [];
-
-// Store session ID for multi-turn conversation
 let sessionId = null;
+let requestVersion = 0;
 
-// Add event listeners
-sendButton.addEventListener('click', sendMessage);
-chatContainer.addEventListener('click', (event) => {
-    const prompt = event.target.closest('[data-prompt]');
-    if (prompt) {
-        messageInput.value = prompt.dataset.prompt;
-        sendMessage();
-    }
-});
-messageInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-    }
+document.getElementById('chatForm').addEventListener('submit', (event) => {
+  event.preventDefault();
+  sendMessage();
 });
 
-// New Chat button - reset session
+document.addEventListener('click', (event) => {
+  const prompt = event.target.closest('[data-prompt]');
+  if (!prompt) return;
+  messageInput.value = prompt.dataset.prompt;
+  sendMessage();
+});
+
 document.getElementById('newChatBtn').addEventListener('click', () => {
-    sessionId = null;
-    conversationHistory = [];
-    chatContainer.innerHTML = isDemo ? `
-        <div class="welcome-message">
-            <h2>Explore research directions</h2>
-            <p>Try a research interest, compare two advisors, or ask a follow-up.</p>
-            <div class="sample-prompts">
-                <button type="button" data-prompt="Who works on trustworthy AI?">Trustworthy AI</button>
-                <button type="button" data-prompt="I am interested in computer vision for healthcare">Vision + healthcare</button>
-                <button type="button" data-prompt="Compare Ava Morgan and Leo Park">Compare advisors</button>
-            </div>
-            <p class="demo-note">Preview profiles are fictional. The full research graph is not connected here.</p>
-        </div>
-    ` : `
-        <div class="welcome-message">
-            <h2>Welcome! 👋</h2>
-            <p>I'm here to help you find advisors based on your research interests.</p>
-            <p>Ask me about any research topic or field, and I'll help you discover potential advisors!</p>
-        </div>
-    `;
-    console.log('[Session] New chat started - session reset');
+  requestVersion += 1;
+  sessionId = null;
+  conversationHistory = [];
+  chatContainer.innerHTML = welcomeMarkup;
+  sendButton.disabled = false;
+  messageInput.value = '';
+  messageInput.focus();
 });
 
-// Send message function
 async function sendMessage() {
-    const message = messageInput.value.trim();
+  const message = messageInput.value.trim();
+  if (!message || sendButton.disabled) return;
+  messageInput.value = '';
+  sendButton.disabled = true;
+  chatContainer.querySelector('.welcome-message')?.remove();
+  addMessage(message, 'user');
+  const history = conversationHistory.slice();
+  conversationHistory.push({role: 'user', content: message});
+  const pending = showTypingIndicator();
+  const version = ++requestVersion;
 
-    if (!message) return;
-
-    // Clear input
-    messageInput.value = '';
-
-    // Disable send button
-    sendButton.disabled = true;
-
-    // Remove welcome message if it exists
-    const welcomeMsg = chatContainer.querySelector('.welcome-message');
-    if (welcomeMsg) {
-        welcomeMsg.remove();
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({message, session_id: sessionId, history})
+    });
+    const data = await response.json();
+    if (version !== requestVersion) return;
+    if (!response.ok || !data.success) throw new Error(data.error || 'The request could not be completed.');
+    sessionId = data.session_id || sessionId;
+    pending.remove();
+    addMessage(data.message, 'assistant');
+    conversationHistory.push({role: 'assistant', content: data.message});
+    if (isDemo && Array.isArray(data.advisors) && data.advisors.length) addAdvisorCards(data.advisors);
+  } catch (error) {
+    if (version !== requestVersion) return;
+    pending.remove();
+    addMessage(error.message || 'Something went wrong. Please try again.', 'assistant', true);
+  } finally {
+    if (version === requestVersion) {
+      sendButton.disabled = false;
+      messageInput.focus();
     }
-
-    // Add user message to chat
-    addMessage(message, 'user');
-
-    // Add to conversation history
-    conversationHistory.push({ role: 'user', content: message });
-
-    // Show typing indicator
-    const typingIndicator = showTypingIndicator();
-
-    try {
-        // Send request to backend with session_id
-        const response = await fetch('/api/chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                message: message,
-                session_id: sessionId,  // CRITICAL: Send session_id to backend
-                history: conversationHistory.slice(0, -1)
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to get response');
-        }
-
-        const data = await response.json();
-
-        // Remove typing indicator
-        typingIndicator.remove();
-
-        if (data.success) {
-            // CRITICAL: Save session_id from backend response
-            if (data.session_id) {
-                sessionId = data.session_id;
-                console.log('[Session] Session ID saved:', sessionId.substring(0, 8) + '...');
-            }
-
-            // Add assistant message
-            addMessage(data.message, 'assistant');
-
-            // Add to conversation history
-            conversationHistory.push({ role: 'assistant', content: data.message });
-
-            // Optional: Log rewriter info for debugging
-            if (data.rewriter_info) {
-                console.log('[Rewriter]', data.rewriter_info);
-            }
-            // Optional: Log tool calls for debugging
-            if (data.tool_calls && data.tool_calls.length > 0) {
-                console.log('Agent called tools:', data.tool_calls);
-            }
-        } else {
-            addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
-        }
-
-    } catch (error) {
-        console.error('Error:', error);
-        typingIndicator.remove();
-        addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
-    } finally {
-        // Re-enable send button
-        sendButton.disabled = false;
-        messageInput.focus();
-    }
+  }
 }
 
-// Add message to chat container
-function addMessage(text, sender) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${sender}`;
-
-    const avatarDiv = document.createElement('div');
-    avatarDiv.className = 'message-avatar';
-
-    const avatarImg = document.createElement('img');
-    avatarImg.src = sender === 'user' ? 'figure/web_logo/user-svgrepo-com.svg' : 'figure/web_logo/student-svgrepo-com.svg';
-    avatarImg.alt = sender;
-
-    avatarDiv.appendChild(avatarImg);
-
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'message-content';
-    contentDiv.textContent = text;
-
-    messageDiv.appendChild(avatarDiv);
-    messageDiv.appendChild(contentDiv);
-
-    chatContainer.appendChild(messageDiv);
-
-    // Scroll to bottom
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+function addMessage(text, sender, isError = false) {
+  const row = document.createElement('div');
+  row.className = `message ${sender}`;
+  const avatar = document.createElement('div');
+  avatar.className = 'message-avatar';
+  avatar.setAttribute('aria-hidden', 'true');
+  avatar.textContent = sender === 'user' ? '●' : '✦';
+  const content = document.createElement('div');
+  content.className = `message-content${isError ? ' error-message' : ''}`;
+  content.textContent = text;
+  row.append(avatar, content);
+  chatContainer.append(row);
+  scrollToLatest();
+  return row;
 }
 
-// Show typing indicator
 function showTypingIndicator() {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = 'message assistant';
+  const row = addMessage('', 'assistant');
+  const content = row.querySelector('.message-content');
+  const indicator = document.createElement('span');
+  indicator.className = 'typing-indicator';
+  indicator.setAttribute('aria-label', 'Loading response');
+  for (let i = 0; i < 3; i += 1) indicator.append(document.createElement('span'));
+  content.append(indicator);
+  return row;
+}
 
-    const avatarDiv = document.createElement('div');
-    avatarDiv.className = 'message-avatar';
+function addAdvisorCards(advisors) {
+  const results = document.createElement('section');
+  results.className = 'advisor-results';
+  results.setAttribute('aria-label', 'Illustrative advisor profiles');
+  const caption = document.createElement('p');
+  caption.className = 'results-caption';
+  caption.textContent = 'Explore these fictional profiles';
+  const grid = document.createElement('div');
+  grid.className = 'advisor-grid';
+  advisors.forEach((advisor) => {
+    const card = document.createElement('article');
+    card.className = 'advisor-card';
+    const top = document.createElement('div');
+    top.className = 'advisor-card-top';
+    const initials = document.createElement('span');
+    initials.className = 'advisor-initials';
+    initials.textContent = advisor.name.split(' ').map((part) => part[0]).join('').slice(0, 2);
+    const heading = document.createElement('div');
+    const name = document.createElement('h3');
+    name.textContent = advisor.name;
+    const label = document.createElement('span');
+    label.className = 'label';
+    label.textContent = 'FICTIONAL ADVISOR';
+    heading.append(name, label);
+    top.append(initials, heading);
+    const focus = document.createElement('p');
+    focus.className = 'focus';
+    focus.textContent = advisor.focus;
+    const approach = document.createElement('p');
+    approach.textContent = advisor.approach;
+    const ask = document.createElement('button');
+    ask.type = 'button';
+    ask.dataset.prompt = `Tell me about ${advisor.name}`;
+    ask.textContent = 'Explore profile →';
+    card.append(top, focus, approach, ask);
+    grid.append(card);
+  });
+  results.append(caption, grid);
+  chatContainer.append(results);
+  scrollToLatest();
+}
 
-    const avatarImg = document.createElement('img');
-    avatarImg.src = 'figure/web_logo/student-svgrepo-com.svg';
-    avatarImg.alt = 'assistant';
-
-    avatarDiv.appendChild(avatarImg);
-
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'message-content';
-
-    const typingDiv = document.createElement('div');
-    typingDiv.className = 'typing-indicator';
-    typingDiv.innerHTML = '<span></span><span></span><span></span>';
-
-    contentDiv.appendChild(typingDiv);
-
-    messageDiv.appendChild(avatarDiv);
-    messageDiv.appendChild(contentDiv);
-
-    chatContainer.appendChild(messageDiv);
-
-    // Scroll to bottom
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-
-    return messageDiv;
+function scrollToLatest() {
+  chatContainer.scrollTop = chatContainer.scrollHeight;
 }

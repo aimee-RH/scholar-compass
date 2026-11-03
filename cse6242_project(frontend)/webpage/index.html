@@ -1,315 +1,70 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scholar Compass — Interactive Preview</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #ffffff;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 900px;
-            height: 90vh;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 25px 30px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 15px;
-        }
-
-        .header img {
-            width: 40px;
-            height: 40px;
-        }
-
-        .header h1 {
-            font-size: 24px;
-            font-weight: 600;
-        }
-
-        .demo-badge {
-            font-size: 12px;
-            color: #fff;
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.35);
-            border-radius: 999px;
-            padding: 5px 9px;
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .new-chat-btn {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .new-chat-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .chat-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 30px;
-            background: #e8eef5;
-        }
-
-        .message {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
-            animation: fadeIn 0.3s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .message.user {
-            flex-direction: row-reverse;
-        }
-
-        .message-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f0f0f0;
-        }
-
-        .message-avatar img {
-            width: 24px;
-            height: 24px;
-        }
-
-        .message-content {
-            max-width: 70%;
-            padding: 15px 20px;
-            border-radius: 18px;
-            line-height: 1.6;
-            white-space: pre-line;
-            word-wrap: break-word;
-        }
-
-        .message.user .message-content {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .message.assistant .message-content {
-            background: white;
-            color: #333;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .input-container {
-            padding: 20px 30px;
-            background: white;
-            border-top: 1px solid #e0e0e0;
-            display: flex;
-            gap: 15px;
-        }
-
-        #messageInput {
-            flex: 1;
-            padding: 15px 20px;
-            border: 2px solid #e0e0e0;
-            border-radius: 25px;
-            font-size: 15px;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-
-        #messageInput:focus {
-            border-color: #667eea;
-        }
-
-        #sendButton {
-            padding: 15px 35px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        #sendButton:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        #sendButton:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .typing-indicator {
-            display: flex;
-            gap: 5px;
-            padding: 15px 20px;
-        }
-
-        .typing-indicator span {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #999;
-            animation: typing 1.4s infinite;
-        }
-
-        .typing-indicator span:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .typing-indicator span:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        @keyframes typing {
-            0%, 60%, 100% {
-                transform: translateY(0);
-            }
-            30% {
-                transform: translateY(-10px);
-            }
-        }
-
-        .welcome-message {
-            text-align: center;
-            padding: 40px 20px;
-            color: #666;
-        }
-
-        .welcome-message h2 {
-            margin-bottom: 15px;
-            color: #333;
-        }
-
-        .welcome-message p {
-            font-size: 16px;
-            line-height: 1.8;
-        }
-
-        .sample-prompts {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 24px;
-        }
-
-        .sample-prompts button {
-            border: 1px solid #c8d2eb;
-            background: white;
-            color: #364780;
-            border-radius: 999px;
-            padding: 10px 14px;
-            cursor: pointer;
-        }
-
-        .sample-prompts button:hover {
-            background: #f1f4ff;
-        }
-
-        .demo-note {
-            margin-top: 22px;
-            font-size: 13px !important;
-            color: #596273;
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f8f6">
+  <meta name="description" content="Explore research directions and discover potential advisors with Scholar Compass.">
+  <title>Scholar Compass — Find your research direction</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body data-demo="{{ 'true' if is_demo else 'false' }}">
-    <div class="container">
-        <div class="header">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <img src="figure/web_logo/compass-svgrepo-com.svg" alt="Scholar Compass logo">
-                <h1>Scholar Compass</h1>
-                {% if is_demo %}<span class="demo-badge">INTERACTIVE PREVIEW</span>{% endif %}
-            </div>
-            <div class="header-right">
-                <button class="new-chat-btn" id="newChatBtn">New Chat</button>
-            </div>
+  <div class="site-shell">
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Scholar Compass home"><span class="brand-mark" aria-hidden="true">✦</span><span>Scholar Compass</span></a>
+      <div class="header-actions">
+        {% if is_demo %}<span class="preview-pill">Fictional data preview</span>{% endif %}
+        <a class="header-link" href="https://github.com/aimee-RH/scholar-compass" target="_blank" rel="noopener noreferrer">View source ↗</a>
+      </div>
+    </header>
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">A better starting point for your next research question</p>
+          <h1 id="hero-title">Find the people behind the ideas.</h1>
+          <p class="hero-description">Describe what you want to explore. Scholar Compass helps you discover research directions, inspect potential advisors, and compare approaches in one conversation.</p>
+          {% if is_demo %}<p class="preview-disclosure">Interactive preview · Four fictional advisor profiles · No account or API key needed</p>{% endif %}
         </div>
-
-        <div class="chat-container" id="chatContainer">
-            <div class="welcome-message">
-                {% if is_demo %}
-                <h2>Explore research directions</h2>
-                <p>Try a research interest, compare two advisors, or ask a follow-up.</p>
-                <div class="sample-prompts">
-                    <button type="button" data-prompt="Who works on trustworthy AI?">Trustworthy AI</button>
-                    <button type="button" data-prompt="I am interested in computer vision for healthcare">Vision + healthcare</button>
-                    <button type="button" data-prompt="Compare Ava Morgan and Leo Park">Compare advisors</button>
-                </div>
-                <p class="demo-note">Preview profiles are fictional. The full research graph is not connected here.</p>
-                {% else %}
-                <h2>Welcome! 👋</h2>
-                <p>I'm here to help you find advisors based on your research interests.</p>
-                <p>Ask me about any research topic or field, and I'll help you discover potential advisors!</p>
-                {% endif %}
-            </div>
+        <div class="hero-orbit" aria-hidden="true"><span>Ideas</span><span>People</span><span>Research</span><b>✦</b></div>
+      </section>
+      <section class="workspace" aria-label="Advisor discovery workspace">
+        <aside class="explore-panel">
+          <div class="panel-heading"><span class="step">01</span><h2>Start exploring</h2></div>
+          <p class="panel-description">Choose a question or write your own. You can ask a follow-up after the first result.</p>
+          <div class="prompt-list">
+            {% if is_demo %}
+            <button type="button" data-prompt="Who works on trustworthy AI?"><span>✧</span> Trustworthy AI <span aria-hidden="true">↗</span></button>
+            <button type="button" data-prompt="I am interested in computer vision for healthcare"><span>✧</span> Vision in healthcare <span aria-hidden="true">↗</span></button>
+            <button type="button" data-prompt="Who studies graph learning and scientific discovery?"><span>✧</span> Graph learning <span aria-hidden="true">↗</span></button>
+            <button type="button" data-prompt="Compare Ava Morgan and Leo Park"><span>⇄</span> Compare two advisors <span aria-hidden="true">↗</span></button>
+            {% else %}
+            <button type="button" data-prompt="Who studies computer vision at Georgia Tech?"><span>✧</span> Computer vision <span aria-hidden="true">↗</span></button>
+            <button type="button" data-prompt="Find researchers working on graph learning"><span>✧</span> Graph learning <span aria-hidden="true">↗</span></button>
+            <button type="button" data-prompt="Who researches human-centered AI?"><span>✧</span> Human-centered AI <span aria-hidden="true">↗</span></button>
+            {% endif %}
+          </div>
+          <div class="how-it-works"><strong>How it works</strong><p>Ask → discover → compare → follow up</p></div>
+          {% if is_demo %}<p class="sample-note">This preview uses fictional examples. The research graph, publications, and live AI workflow are not connected.</p>{% endif %}
+        </aside>
+        <div class="conversation-panel">
+          <div class="conversation-header">
+            <div><span class="step">02</span><h2>Your discovery space</h2></div>
+            <button type="button" class="reset-button" id="newChatBtn">↺ <span>New search</span></button>
+          </div>
+          <div class="chat-container" id="chatContainer" role="log" aria-live="polite" aria-label="Conversation">
+            <div class="welcome-message"><div class="welcome-icon" aria-hidden="true">✦</div><h3>What would you like to investigate?</h3><p>Try “Who works on trustworthy AI?” or ask about a field that interests you.</p></div>
+          </div>
+          <form class="input-container" id="chatForm">
+            <label class="sr-only" for="messageInput">Research question</label>
+            <input id="messageInput" type="text" maxlength="500" placeholder="Ask about a research interest or advisor..." autocomplete="off" required>
+            <button type="submit" id="sendButton" aria-label="Send question">Ask <span aria-hidden="true">→</span></button>
+          </form>
+          <p class="input-hint">{% if is_demo %}Sample profiles are fictional. Results are illustrative, not advisor recommendations.{% else %}Check primary sources before contacting an advisor.{% endif %}</p>
         </div>
-
-        <div class="input-container">
-            <input
-                type="text"
-                id="messageInput"
-                placeholder="Ask about research interests or advisors..."
-                autocomplete="off"
-            >
-            <button id="sendButton">Send</button>
-        </div>
-    </div>
-
-    <script src="app.js"></script>
+      </section>
+    </main>
+    <footer>Built to make research discovery more approachable. <span>Scholar Compass</span></footer>
+  </div>
+  <script src="app.js" defer></script>
 </body>
 </html>
