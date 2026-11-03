@@ -36,9 +36,13 @@ User question
 
 The active application is in [`cse6242_project(frontend)/webpage`](cse6242_project%28frontend%29/webpage/). The separate [`backend/rag.py`](backend/rag.py) is an earlier Flask RAG service, not the LangGraph application described above.
 
-## Public preview on Replit
+## Try the live preview
+
+**[Open the one-click interactive preview](https://scholar-compass-preview-aimee.bestflint2.chatgpt.site/)** — no setup or account required. It uses fictional advisor profiles and runs entirely in the browser.
 
 The [interactive preview](demo_app.py) runs with four clearly labeled **fictional** advisor profiles. Its web interface offers one-click research prompts, advisor cards, comparison, and follow-up questions without requiring API keys, a graph database, or the large BGE-M3 model. The sample API returns structured profile data so the cards reflect the same answer as the conversation. It does **not** claim to return real advisor recommendations or the full GraphRAG results described above.
+
+### Run the Flask preview on Replit
 
 Import this repository at [Replit's GitHub import page](https://replit.com/import). The root [`requirements.txt`](requirements.txt) installs only the preview dependencies, and [`.replit`](.replit) runs the preview on port 5001. Click **Run**, then check `/api/health` and try the prompt buttons. Replit's Publishing tool can publish the same app using the configured deployment command.
 
