@@ -40,6 +40,8 @@ The active application is in [`cse6242_project(frontend)/webpage`](cse6242_proje
 
 **[Open the one-click interactive preview](https://scholar-compass-preview-aimee.bestflint2.chatgpt.site/)** — no setup or account required. It uses fictional advisor profiles and runs entirely in the browser.
 
+The deployed static preview is saved in [`preview-static/`](preview-static/). It is a self-contained export of the Flask preview UI; edits to the Flask app do not automatically update the deployed site.
+
 The [interactive preview](demo_app.py) runs with four clearly labeled **fictional** advisor profiles. Its web interface offers one-click research prompts, advisor cards, comparison, and follow-up questions without requiring API keys, a graph database, or the large BGE-M3 model. The sample API returns structured profile data so the cards reflect the same answer as the conversation. It does **not** claim to return real advisor recommendations or the full GraphRAG results described above.
 
 ### Run the Flask preview on Replit
