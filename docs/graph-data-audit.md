@@ -15,4 +15,6 @@ WHERE name = 'paper_embedding_idx'
 RETURN name, type, state;
 ```
 
+The read-only [`scripts/graph_readiness.py`](../cse6242_project%28frontend%29/webpage/scripts/graph_readiness.py) runs these checks and samples real paper-to-author evidence. For example, from the application directory, set the Neo4j environment variables for a **copy** of the graph and run `python scripts/graph_readiness.py --topic "machine learning"`. It exits with status 1 until embeddings and the vector index are present.
+
 The first real-data demo should retrieve a small set of papers for one research topic, show each paper's title, year, and matched authors, and link those authors to advisor cards. Keep the fictional preview explicitly labeled until this path is verified end to end. Do not commit raw graph data, embeddings, API keys, or local `.env` files.
