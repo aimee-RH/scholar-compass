@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f8f6">
+  <meta name="description" content="Explore research directions and discover potential advisors with Scholar Compass.">
+  <title>Scholar Compass — Find your research direction</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-demo="true">
+  <div class="site-shell">
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Scholar Compass home"><span class="brand-mark" aria-hidden="true">✦</span><span>Scholar Compass</span></a>
+      <div class="header-actions">
+        <span class="preview-pill">Fictional data preview</span>
+        <a class="header-link" href="https://github.com/aimee-RH/scholar-compass" target="_blank" rel="noopener noreferrer">View source ↗</a>
+      </div>
+    </header>
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">A better starting point for your next research question</p>
+          <h1 id="hero-title">Find the people behind the ideas.</h1>
+          <p class="hero-description">Describe what you want to explore. Scholar Compass helps you discover research directions, inspect potential advisors, and compare approaches in one conversation.</p>
+          <p class="preview-disclosure">Interactive preview · Four fictional advisor profiles · No account or API key needed</p>
+        </div>
+        <div class="hero-orbit" aria-hidden="true"><span>Ideas</span><span>People</span><span>Research</span><b>✦</b></div>
+      </section>
+      <section class="workspace" aria-label="Advisor discovery workspace">
+        <aside class="explore-panel">
+          <div class="panel-heading"><span class="step">01</span><h2>Start exploring</h2></div>
+          <p class="panel-description">Choose a question or write your own. You can ask a follow-up after the first result.</p>
+          <div class="prompt-list">
+            
+            <button type="button" data-prompt="Who works on trustworthy AI?"><span>✧</span> Trustworthy AI <span aria-hidden="true">↗</span></button>
+            <button type="button" data-prompt="I am interested in computer vision for healthcare"><span>✧</span> Vision in healthcare <span aria-hidden="true">↗</span></button>
+            <button type="button" data-prompt="Who studies graph learning and scientific discovery?"><span>✧</span> Graph learning <span aria-hidden="true">↗</span></button>
+            <button type="button" data-prompt="Compare Ava Morgan and Leo Park"><span>⇄</span> Compare two advisors <span aria-hidden="true">↗</span></button>
+            
+          </div>
+          <div class="how-it-works"><strong>How it works</strong><p>Ask → discover → compare → follow up</p></div>
+          <p class="sample-note">This preview uses fictional examples. The research graph, publications, and live AI workflow are not connected.</p>
+          <a class="network-link" href="network/">Explore a real collaboration graph <span aria-hidden="true">↗</span></a>
+        </aside>
+        <div class="conversation-panel">
+          <div class="conversation-header">
+            <div><span class="step">02</span><h2>Your discovery space</h2></div>
+            <button type="button" class="reset-button" id="newChatBtn">↺ <span>New search</span></button>
+          </div>
+          <div class="chat-container" id="chatContainer" role="log" aria-live="polite" aria-label="Conversation">
+            <div class="welcome-message"><div class="welcome-icon" aria-hidden="true">✦</div><h3>What would you like to investigate?</h3><p>Try “Who works on trustworthy AI?” or ask about a field that interests you.</p></div>
+          </div>
+          <form class="input-container" id="chatForm">
+            <label class="sr-only" for="messageInput">Research question</label>
+            <input id="messageInput" type="text" maxlength="500" placeholder="Ask about a research interest or advisor..." autocomplete="off" required>
+            <button type="submit" id="sendButton" aria-label="Send question">Ask <span aria-hidden="true">→</span></button>
+          </form>
+          <p class="input-hint">Sample profiles are fictional. Results are illustrative, not advisor recommendations.</p>
+        </div>
+      </section>
+    </main>
+    <footer>Built to make research discovery more approachable. <span>Scholar Compass</span></footer>
+  </div>
+  <script src="demo-static.js" defer></script>
+  <script src="app.js" defer></script>
+</body>
+</html>

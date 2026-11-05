@@ -47,7 +47,7 @@ citation  – Total citation count for the paper
 ------------------------------------------------------------
 1. Weight Calculation
    Each paper contributes a time-decayed weight:
-   weight = citation × exp( -lambda × (2025 - year) )
+   weight = citation × exp( -lambda × (current calendar year - year) )
    where lambda = 0.1 (recent papers contribute more).
 
 2. Aggregation
@@ -104,10 +104,10 @@ offset = 8                           Label distance from node center
 8. How to Run
 ------------------------------------------------------------
 1. Place network.html and data.csv in the same directory.
-2. Open network.html directly in a modern browser (Chrome recommended).
+2. From this directory run `python3 -m http.server 8000`, then open `http://localhost:8000/network.html`.
 3. Ensure Internet access to load D3.js:
    https://d3js.org/d3.v5.min.js
-4. The interactive collaboration graph will render automatically.
+4. The interactive collaboration graph will render automatically. The bundled CSV is a historical Kai Wang example, not live data.
 
 
 ------------------------------------------------------------

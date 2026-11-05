@@ -2,11 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Scholar Compass - Research Collaboration Graph</title>
 <style>
+body { margin: 16px; font-family: sans-serif; }
+svg { display: block; width: 100%; height: auto; max-height: 80vh; }
 path.link { fill: none; }
 circle { stroke: black; stroke-width: 1.5px; }
-text { fill: #000; font: 10px sans-serif; pointer-events: none; }
+text { fill: #000; font: 13px sans-serif; pointer-events: none; }
 .tooltip {
   position: absolute; text-align: left; background: #fefefe; border: 1px solid #999;
   border-radius: 5px; padding: 8px; font-size: 12px; pointer-events: none;
@@ -27,7 +30,7 @@ d3.dsv(",", "data.csv", function(d) {
   return { author1: d.author1, author2: d.author2, year: +d.year, citation: +d.citation };
 }).then(function(data) {
 
-  var nodes = {}, linkMap = {}, lambda = 0.1, currentYear = 2025;
+  var nodes = {}, linkMap = {}, lambda = 0.1, currentYear = new Date().getFullYear();
 
   // 聚合边（多论文求和）
   data.forEach(function(d) {
@@ -59,12 +62,12 @@ d3.dsv(",", "data.csv", function(d) {
   nodeArray.forEach(n => n.degreeUnique = neighborSets[n.name].size);
 
   // =================== SVG & 力导向 ===================
-  var width = 1200, height = 700;
-  var svg = d3.select("body").append("svg").attr("width", width).attr("height", height);
+  var width = 900, height = 600;
+  var svg = d3.select("body").append("svg").attr("viewBox", `0 0 ${width} ${height}`);
 
   var force = d3.forceSimulation(nodeArray)
-      .force("link", d3.forceLink(links).id(d => d.name).distance(150))
-      .force("charge", d3.forceManyBody().strength(-250))
+      .force("link", d3.forceLink(links).id(d => d.name).distance(180))
+      .force("charge", d3.forceManyBody().strength(-400))
       .force("center", d3.forceCenter(width/2, height/2))
       .on("tick", tick);
 
@@ -83,7 +86,7 @@ d3.dsv(",", "data.csv", function(d) {
       .on("mouseover", function(d) {
         tooltip.transition().duration(200).style("opacity", 1);
         var total = (d.weightValue && !isNaN(d.weightValue)) ? d.weightValue.toFixed(2) : "N/A";
-        var html = `<b>${d.source} — ${d.target}</b><br/>Total Weight: ${total}<br/><br/><b>Papers:</b><br/>`;
+        var html = `<b>${d.source.name || d.source} — ${d.target.name || d.target}</b><br/>Total Weight: ${total}<br/><br/><b>Papers:</b><br/>`;
         d.papers.forEach(p => { html += `Year: ${p.year}, Citation: ${p.citation}, Decay: ${p.decay}, w=${p.singleWeight}<br/>`; });
         tooltip.html(html)
           .style("left", (d3.event.pageX + 10) + "px")

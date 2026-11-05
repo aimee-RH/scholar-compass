@@ -2,7 +2,7 @@
 
 **Agentic academic advisor discovery powered by Claude, LangGraph, BGE-M3, and Neo4j GraphRAG.**
 
-Scholar Compass helps students discover, compare, and analyze research advisors through natural-language conversations. It combines multi-turn intent routing, entity disambiguation, semantic retrieval, graph queries, and persistent session context.
+Scholar Compass helps students identify potential research advisors and prepare informed, specific outreach. Students can explore a scholar's recent papers, changes in research focus, and collaboration network before deciding whom to contact. The application combines multi-turn intent routing, entity disambiguation, semantic retrieval, graph queries, and persistent session context.
 
 ## Highlights
 
@@ -11,6 +11,7 @@ Scholar Compass helps students discover, compare, and analyze research advisors 
 - Claude-powered structured routing and Text2Cypher fallback
 - Fast-path disambiguation without an LLM call
 - Advisor comparison and recommendation tools
+- Research trajectory analysis and a [D3 collaboration network example](cse6242_project%28frontend%29/webpage/figure/network_visualization/network_visualization/network.html) (bundled historical sample data)
 - Evaluation scripts, latency benchmarks, and LangSmith tracing
 
 ## Engineering decisions
@@ -36,9 +37,19 @@ User question
 
 The active application is in [`cse6242_project(frontend)/webpage`](cse6242_project%28frontend%29/webpage/). The separate [`backend/rag.py`](backend/rag.py) is an earlier Flask RAG service, not the LangGraph application described above.
 
-## Public preview on Replit
+## Try the live preview
+
+**[Open the one-click interactive preview](https://scholar-compass-preview-aimee.bestflint2.chatgpt.site/)** — no setup or account required. It uses fictional advisor profiles and runs entirely in the browser.
+
+The [collaboration network example](https://scholar-compass-preview-aimee.bestflint2.chatgpt.site/network/) is a separate static D3 visualization using a small historical sample from the project's research data. It is distinct from the fictional advisor preview.
+
+The deployed static preview is saved in [`preview-static/`](preview-static/). It is a self-contained export of the Flask preview UI; edits to the Flask app do not automatically update the deployed site.
+
+The [1,000-paper embedding pilot](docs/embedding-pilot.md) records what was verified on an isolated local graph copy and what remains before the real advisor discovery flow can be published.
 
 The [interactive preview](demo_app.py) runs with four clearly labeled **fictional** advisor profiles. Its web interface offers one-click research prompts, advisor cards, comparison, and follow-up questions without requiring API keys, a graph database, or the large BGE-M3 model. The sample API returns structured profile data so the cards reflect the same answer as the conversation. It does **not** claim to return real advisor recommendations or the full GraphRAG results described above.
+
+### Run the Flask preview on Replit
 
 Import this repository at [Replit's GitHub import page](https://replit.com/import). The root [`requirements.txt`](requirements.txt) installs only the preview dependencies, and [`.replit`](.replit) runs the preview on port 5001. Click **Run**, then check `/api/health` and try the prompt buttons. Replit's Publishing tool can publish the same app using the configured deployment command.
 
