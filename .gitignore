@@ -13,6 +13,8 @@ neostore*
 
 # --- Data Files ---
 **/*.csv
+!cse6242_project(frontend)/webpage/figure/network_visualization/network_visualization/data.csv
+!preview-static/network/data.csv
 **/*.json
 **/*.parquet
 data/

@@ -40,6 +40,8 @@ h2{font-size:17px;letter-spacing:-.035em;color:#1c4540;margin:0}
 .prompt-list button span:first-child{font-size:19px;color:#529571}.prompt-list button span:last-child{color:#8cab9a}
 .how-it-works{margin-top:36px;border-top:1px solid #d7e6d9;padding-top:23px;font-size:12px;color:#5f776b}.how-it-works strong{color:#26584a}.how-it-works p{margin:7px 0 0}
 .sample-note{font-size:11px;line-height:1.55;color:#718177;margin:21px 0 0}
+.network-link{display:inline-flex;gap:6px;margin-top:10px;color:#2e795a;font-size:12px;font-weight:700;text-decoration:none}
+.network-link:hover{text-decoration:underline}
 .conversation-panel{display:flex;flex-direction:column;min-width:0;min-height:620px}
 .conversation-header{height:76px;padding:0 26px;display:flex;align-items:center;justify-content:space-between;gap:14px;border-bottom:1px solid #edf1ee}
 .reset-button{border:0;background:transparent;color:#52776a;font-size:12px;font-weight:700;padding:8px;border-radius:6px}.reset-button:hover{background:#edf6ef}
