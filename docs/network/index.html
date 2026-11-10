@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scholar Compass - Research Collaboration Graph</title>
+<style>
+body { margin: 16px; font-family: sans-serif; }
+svg { display: block; width: 100%; height: auto; max-height: 80vh; }
+path.link { fill: none; }
+circle { stroke: black; stroke-width: 1.5px; }
+text { fill: #000; font: 13px sans-serif; pointer-events: none; }
+.tooltip {
+  position: absolute; text-align: left; background: #fefefe; border: 1px solid #999;
+  border-radius: 5px; padding: 8px; font-size: 12px; pointer-events: none;
+  box-shadow: 0 0 4px rgba(0,0,0,0.3);
+}
+.network-header { max-width: 1050px; margin: 0 auto 18px; color: #193b35; }
+.network-header a { color: #2e795a; font-weight: 700; text-decoration: none; }
+.network-header a:hover { text-decoration: underline; }
+.network-header h1 { font-size: clamp(24px, 4vw, 42px); margin: 18px 0 8px; }
+.network-header p { max-width: 780px; line-height: 1.6; color: #586d65; margin: 0; }
+</style>
+</head>
+
+<body>
+<div class="network-header"><a href="../insights/">← All research insights</a><h1>Research collaboration network</h1><p>A real historical example centered on Kai Wang, showing coauthors and time-weighted collaboration strength (2016–2025). Based on the project's OpenAlex data; this visualization is separate from the fictional advisor preview.</p></div>
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script>
+// =================== 参数设置 ===================
+const mainPerson = "Kai Wang";  // ★ 指定主要人物
+const mainColor = "#FFD700";      // 金色
+
+// =================== 数据读取 ===================
+d3.dsv(",", "data.csv", function(d) {
+  return { author1: d.author1, author2: d.author2, year: +d.year, citation: +d.citation };
+}).then(function(data) {
+
+  var nodes = {}, linkMap = {}, lambda = 0.1, currentYear = new Date().getFullYear();
+
+  // 聚合边（多论文求和）
+  data.forEach(function(d) {
+    if (!nodes[d.author1]) nodes[d.author1] = { name: d.author1 };
+    if (!nodes[d.author2]) nodes[d.author2] = { name: d.author2 };
+
+    var decay = Math.exp(-lambda * (currentYear - d.year));
+    var singleWeight = d.citation * decay;
+    var key = [d.author1, d.author2].sort().join("-");
+    if (!linkMap[key]) {
+      linkMap[key] = { source: d.author1, target: d.author2, weightValue: 0, papers: [] };
+    }
+    linkMap[key].weightValue += singleWeight;
+    linkMap[key].papers.push({
+      year: d.year, citation: d.citation, decay: decay.toFixed(3), singleWeight: singleWeight.toFixed(2)
+    });
+  });
+
+  var links = Object.values(linkMap);
+  var nodeArray = Object.values(nodes);
+
+  // === 计算唯一邻居数 ===
+  var neighborSets = {};
+  nodeArray.forEach(n => neighborSets[n.name] = new Set());
+  links.forEach(function(l) {
+    neighborSets[l.source].add(l.target);
+    neighborSets[l.target].add(l.source);
+  });
+  nodeArray.forEach(n => n.degreeUnique = neighborSets[n.name].size);
+
+  // =================== SVG & 力导向 ===================
+  var width = 900, height = 600;
+  var svg = d3.select("body").append("svg").attr("viewBox", `0 0 ${width} ${height}`);
+
+  var force = d3.forceSimulation(nodeArray)
+      .force("link", d3.forceLink(links).id(d => d.name).distance(180))
+      .force("charge", d3.forceManyBody().strength(-400))
+      .force("center", d3.forceCenter(width/2, height/2))
+      .on("tick", tick);
+
+  // =================== Tooltip ===================
+  var tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
+
+  // =================== 连线 ===================
+  var weights = links.map(d => d.weightValue);
+  var medianW = d3.median(weights);
+
+  var link = svg.append("g").selectAll("path").data(links).enter().append("path")
+      .attr("class", "link")
+      .attr("stroke-width", 2)
+      .attr("stroke", d => d.weightValue >= medianW ? "gray" : "green")
+      .attr("stroke-dasharray", d => d.weightValue >= medianW ? "0" : "4,2")
+      .on("mouseover", function(d) {
+        tooltip.transition().duration(200).style("opacity", 1);
+        var total = (d.weightValue && !isNaN(d.weightValue)) ? d.weightValue.toFixed(2) : "N/A";
+        var html = `<b>${d.source.name || d.source} — ${d.target.name || d.target}</b><br/>Total Weight: ${total}<br/><br/><b>Papers:</b><br/>`;
+        d.papers.forEach(p => { html += `Year: ${p.year}, Citation: ${p.citation}, Decay: ${p.decay}, w=${p.singleWeight}<br/>`; });
+        tooltip.html(html)
+          .style("left", (d3.event.pageX + 10) + "px")
+          .style("top", (d3.event.pageY - 20) + "px");
+      })
+      .on("mouseout", function(){ tooltip.transition().duration(200).style("opacity", 0); });
+
+  // =================== 节点 ===================
+  var sizeScale = d3.scaleLinear()
+      .domain(d3.extent(nodeArray, d => d.degreeUnique))
+      .range([5, 20]);
+
+  var node = svg.selectAll(".node").data(nodeArray).enter().append("g")
+      .attr("class", "node")
+      .call(d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended));
+
+  // ★ 区分主要人物
+  node.each(function(d) {
+    if (d.name === mainPerson) {
+      // 用五角星表示主要人物
+      var r = sizeScale(d.degreeUnique) * 1.5;
+      var star = d3.symbol().type(d3.symbolStar).size(r * 20);
+      d3.select(this).append("path")
+        .attr("d", star)
+        .attr("fill", mainColor)
+        .attr("stroke", "#DAA520")
+        .attr("stroke-width", 2);
+    } else {
+      // 普通节点
+      d3.select(this).append("circle")
+        .attr("r", sizeScale(d.degreeUnique))
+        .style("fill", d => d.degreeUnique >= 2 ? "#2c7fb8" : "#edf8b1");
+    }
+  });
+
+  // 标签：右上 45°，距离 r + 8
+  const offset = 8;
+  node.append("text")
+      .attr("x", d => (sizeScale(d.degreeUnique) + offset) * Math.cos(Math.PI / 4))
+      .attr("y", d => -(sizeScale(d.degreeUnique) + offset) * Math.sin(Math.PI / 4))
+      .attr("text-anchor", "start").attr("alignment-baseline", "middle")
+      .text(d => d.name).style("font-weight", d => d.name === mainPerson ? "bold" : "normal");
+
+  // =================== tick 更新 ===================
+  function tick() {
+    link.attr("d", function(d) {
+      var dx = d.target.x - d.source.x, dy = d.target.y - d.source.y, dr = Math.sqrt(dx*dx + dy*dy);
+      return "M" + d.source.x + "," + d.source.y + "A" + dr + "," + dr + " 0 0,1 " + d.target.x + "," + d.target.y;
+    });
+    node.attr("transform", d => "translate(" + d.x + "," + d.y + ")");
+  }
+
+  // =================== 拖拽函数 ===================
+  function dragstarted(d){ if(!d3.event.active) force.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; }
+  function dragged(d){ d.fx=d3.event.x; d.fy=d3.event.y; }
+  function dragended(d){ if(!d3.event.active) force.alphaTarget(0); d.fx=null; d.fy=null; }
+
+}).catch(function(error){ console.error(error); });
+</script>
+</body>
+</html>

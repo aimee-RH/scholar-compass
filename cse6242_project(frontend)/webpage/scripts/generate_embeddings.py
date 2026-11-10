@@ -81,26 +81,35 @@ class EmbeddingGenerator:
     def close(self):
         self.driver.close()
 
-    def get_papers_to_embed(self, limit: Optional[int] = None) -> List[Dict]:
+    def get_papers_to_embed(self, limit: Optional[int] = None,
+                            subfield: Optional[str] = None,
+                            from_year: Optional[int] = None,
+                            to_year: Optional[int] = None) -> List[Dict]:
         """
         查出还没生成 embedding 的 paper，带上 title / abstract / subfield / source
         """
         cypher = """
         MATCH (p:Paper)
         WHERE p.embedding IS NULL
+          AND ($from_year IS NULL OR p.publication_year >= $from_year)
+          AND ($to_year IS NULL OR p.publication_year <= $to_year)
         OPTIONAL MATCH (p)-[:IN_SUBFIELD]->(sf:Subfield)
         OPTIONAL MATCH (p)-[:PUBLISHED_IN]->(src:Source)
+        WITH p, sf, src
+        WHERE $subfield IS NULL OR sf.display_name = $subfield
         RETURN p.id AS id,
                p.title AS title,
                p.abstract AS abstract,
                sf.display_name AS subfield,
                src.display_name AS source
         """
-        if limit:
-            cypher += f" LIMIT {limit}"
+        cypher += " ORDER BY p.id"
+        if limit is not None:
+            cypher += " LIMIT $limit"
 
         with self.driver.session(database=self.database) as sess:
-            result = sess.run(cypher)
+            result = sess.run(cypher, limit=limit, subfield=subfield,
+                              from_year=from_year, to_year=to_year)
             return [dict(r) for r in result]
 
     def update_embeddings(self, updates: List[Dict]):
@@ -176,7 +185,14 @@ def main():
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--reset", action="store_true", help="Delete progress file")
     parser.add_argument("--batch-size", type=int, default=BATCH_SIZE)
+    parser.add_argument("--subfield", help="Exact Neo4j subfield name for a focused pilot")
+    parser.add_argument("--from-year", type=int, help="Earliest publication year to include")
+    parser.add_argument("--to-year", type=int, help="Latest publication year to include")
     args = parser.parse_args()
+    if args.limit is not None and args.limit < 1:
+        parser.error("--limit must be positive")
+    if args.from_year and args.to_year and args.from_year > args.to_year:
+        parser.error("--from-year must be no later than --to-year")
 
     load_dotenv()
     uri = os.getenv("NEO4J_URI", "bolt://localhost:7688")
@@ -207,7 +223,8 @@ def main():
         already_done = gen.count_embedded()
         logger.info(f"📊 Database status: {already_done}/{total_in_db} papers have embeddings")
 
-        papers = gen.get_papers_to_embed(limit=args.limit)
+        papers = gen.get_papers_to_embed(limit=args.limit, subfield=args.subfield,
+                                         from_year=args.from_year, to_year=args.to_year)
         logger.info(f"📋 Papers to process: {len(papers)}")
 
         if not papers:
