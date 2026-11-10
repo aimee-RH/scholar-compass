@@ -3,18 +3,19 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).parent
-NETWORK_DIR = ROOT / "preview-static" / "network"
+STATIC_DIR = ROOT / "docs"
+NETWORK_DIR = STATIC_DIR / "network"
 
 
 def test_static_assets():
-    home_html = (ROOT / "preview-static" / "index.html").read_text()
+    home_html = (STATIC_DIR / "index.html").read_text()
     assert 'href="insights/"' in home_html
 
-    insights_html = (ROOT / "preview-static" / "insights" / "index.html").read_text()
+    insights_html = (STATIC_DIR / "insights" / "index.html").read_text()
     assert "4 interactive visualizations" in insights_html
     assert 'href="../network/"' in insights_html
 
-    venues_html = (ROOT / "preview-static" / "insights" / "venues" / "index.html").read_text()
+    venues_html = (STATIC_DIR / "insights" / "venues" / "index.html").read_text()
     assert venues_html.count("<canvas") == 3
 
     network_html = (NETWORK_DIR / "index.html").read_text()

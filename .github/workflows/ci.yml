@@ -1,9 +1,8 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
-  pull_request:
+  # Automatic runs can be restored after the GitHub Actions billing lock is cleared.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -44,5 +43,5 @@ jobs:
 
       - name: Check JavaScript syntax
         run: |
-          node --check preview-static/app.js
-          node --check preview-static/demo-static.js
+          node --check docs/app.js
+          node --check docs/demo-static.js
