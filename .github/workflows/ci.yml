@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    name: Preview and static assets
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          package-manager-cache: false
+
+      - name: Install preview dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Test Flask preview
+        run: python test_demo_app.py
+
+      - name: Check static preview assets
+        run: python test_static_assets.py
+
+      - name: Check JavaScript syntax
+        run: |
+          node --check preview-static/app.js
+          node --check preview-static/demo-static.js

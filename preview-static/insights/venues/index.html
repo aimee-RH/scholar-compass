@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f8f6">
+  <meta name="description" content="Explore Bo Dai's publication venues and trends in Scholar Compass.">
+  <title>Publication portfolio — Scholar Compass</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
+    :root{font-family:'DM Sans',system-ui,sans-serif;color:#263a39;background:#f6f8f6}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 88% 5%,#e6f1e9 0,transparent 28%),#f6f8f6}a{color:inherit}.shell{max-width:1200px;margin:auto;padding:0 32px 60px}.header{height:82px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #dbe5df}.brand,.back{text-decoration:none;font-weight:800;color:#174e43}.brand{font:800 18px 'Manrope',sans-serif}.back{font-size:13px}.hero{display:flex;align-items:end;justify-content:space-between;gap:30px;padding:54px 0 35px}.eyebrow{margin:0 0 12px;text-transform:uppercase;letter-spacing:.15em;font-size:11px;font-weight:800;color:#4e8970}.hero h1{margin:0 0 14px;font:800 clamp(37px,6vw,62px)/1.04 'Manrope',sans-serif;letter-spacing:-.055em;color:#123e39}.hero p{max-width:680px;margin:0;color:#647772;font-size:15px;line-height:1.65}.profile{flex:none;padding:14px 16px;border:1px solid #cee0d5;border-radius:14px;background:#fff;color:#507166;font-size:12px;line-height:1.5}.profile strong{display:block;color:#1b5548;font-size:15px}.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}.chart-card{padding:25px;border:1px solid #d7e5dc;border-radius:20px;background:#fff;box-shadow:0 14px 34px #365d4910}.chart-card.wide{grid-column:1/-1}.chart-heading{display:flex;align-items:start;justify-content:space-between;gap:18px;margin-bottom:20px}.chart-number{display:grid;place-items:center;width:31px;height:31px;flex:none;border-radius:10px;background:#e2f1e6;color:#247153;font-size:11px;font-weight:800}.chart-heading>div{flex:1}.chart-heading h2{margin:0 0 6px;font:700 18px 'Manrope',sans-serif;letter-spacing:-.035em;color:#1d4b42}.chart-heading p{margin:0;color:#74847d;font-size:12px;line-height:1.5}.chart-wrap{position:relative;height:340px}.chart-wrap.small{height:310px}.note{margin:22px 0 0;color:#7c8d85;font-size:11px;line-height:1.6}@media(max-width:780px){.shell{padding:0 17px 40px}.header{height:68px}.hero{display:block;padding:43px 0 28px}.profile{display:inline-block;margin-top:19px}.grid{grid-template-columns:1fr}.chart-card.wide{grid-column:auto}.chart-card{padding:19px}.chart-wrap{height:320px}.chart-wrap.small{height:280px}}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="header"><a class="brand" href="../../">✦ Scholar Compass</a><a class="back" href="../">All research insights →</a></header>
+    <main>
+      <section class="hero">
+        <div><p class="eyebrow">Publication portfolio · Three interactive views</p><h1>Where the research lands.</h1><p>A publication record can reveal the communities a potential advisor participates in and whether their recent direction aligns with a student's interests.</p></div>
+        <div class="profile"><strong>Bo Dai</strong>Georgia Institute of Technology<br>24 publications · 2020–2025</div>
+      </section>
+      <section class="grid">
+        <article class="chart-card wide"><div class="chart-heading"><span class="chart-number">02</span><div><h2>Top publication venues</h2><p>Publication count across the strongest represented venues.</p></div></div><div class="chart-wrap"><canvas id="topVenuesChart"></canvas></div></article>
+        <article class="chart-card"><div class="chart-heading"><span class="chart-number">03</span><div><h2>Conference vs. journal</h2><p>The format mix in this 2020–2025 sample.</p></div></div><div class="chart-wrap small"><canvas id="publicationMixChart"></canvas></div></article>
+        <article class="chart-card"><div class="chart-heading"><span class="chart-number">04</span><div><h2>Yearly publication trends</h2><p>Recent activity across NeurIPS, ICML, and ICLR.</p></div></div><div class="chart-wrap small"><canvas id="yearlyTrendChart"></canvas></div></article>
+      </section>
+      <p class="note">Bundled historical project data. Counts describe this sample and should not be treated as a complete or live faculty record.</p>
+    </main>
+  </div>
+  <script>
+    const venues = [
+      {name:'NeurIPS', count:10, byYear:{2020:2,2023:3,2024:1,2025:4}},
+      {name:'AISTATS', count:5, byYear:{2023:2,2025:3}},
+      {name:'ICML', count:4, byYear:{2023:1,2024:2,2025:1}},
+      {name:'ICLR', count:2, byYear:{2023:1,2025:1}},
+      {name:'UAI', count:1, byYear:{2022:1}},
+      {name:'EMNLP', count:1, byYear:{2021:1}},
+      {name:'IROS', count:1, byYear:{2024:1}}
+    ];
+    const textColor = '#536d64';
+    const gridColor = '#e7eee9';
+    Chart.defaults.font.family = "'DM Sans', system-ui, sans-serif";
+    Chart.defaults.color = textColor;
+
+    new Chart(document.getElementById('topVenuesChart'), {
+      type:'bar',
+      data:{labels:venues.map(v=>v.name),datasets:[{data:venues.map(v=>v.count),backgroundColor:venues.map((_,i)=>i<4?'#347c60':'#94bda7'),borderRadius:7,borderSkipped:false}]},
+      options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} publications`}}},scales:{x:{beginAtZero:true,ticks:{stepSize:1},grid:{color:gridColor},title:{display:true,text:'Number of publications'}},y:{grid:{display:false}}}}
+    });
+
+    new Chart(document.getElementById('publicationMixChart'), {
+      type:'doughnut',
+      data:{labels:['Conference papers','Journal papers'],datasets:[{data:[24,0],backgroundColor:['#347c60','#d8e7de'],borderWidth:0,hoverOffset:5}]},
+      options:{maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom',labels:{padding:18,usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} papers`}}}}
+    });
+
+    const years = [2020,2021,2022,2023,2024,2025];
+    const series = name => years.map(year => venues.find(v=>v.name===name).byYear[year] || 0);
+    new Chart(document.getElementById('yearlyTrendChart'), {
+      type:'line',
+      data:{labels:years,datasets:[
+        {label:'NeurIPS',data:series('NeurIPS'),borderColor:'#287057',backgroundColor:'#28705718',fill:true,tension:.35},
+        {label:'ICML',data:series('ICML'),borderColor:'#ba7c3f',backgroundColor:'#ba7c3f12',tension:.35},
+        {label:'ICLR',data:series('ICLR'),borderColor:'#6a72b8',backgroundColor:'#6a72b812',tension:.35}
+      ]},
+      options:{maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{padding:15,usePointStyle:true}}},scales:{y:{beginAtZero:true,ticks:{stepSize:1},grid:{color:gridColor}},x:{grid:{display:false}}}}
+    });
+  </script>
+</body>
+</html>

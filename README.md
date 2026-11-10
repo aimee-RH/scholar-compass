@@ -1,5 +1,8 @@
 # Scholar Compass
 
+[![CI](https://github.com/aimee-RH/scholar-compass/actions/workflows/ci.yml/badge.svg)](https://github.com/aimee-RH/scholar-compass/actions/workflows/ci.yml)
+[![Deploy GitHub Pages](https://github.com/aimee-RH/scholar-compass/actions/workflows/pages.yml/badge.svg)](https://github.com/aimee-RH/scholar-compass/actions/workflows/pages.yml)
+
 **Agentic academic advisor discovery powered by Claude, LangGraph, BGE-M3, and Neo4j GraphRAG.**
 
 Scholar Compass helps students identify potential research advisors and prepare informed, specific outreach. Students can explore a scholar's recent papers, changes in research focus, and collaboration network before deciding whom to contact. The application combines multi-turn intent routing, entity disambiguation, semantic retrieval, graph queries, and persistent session context.
@@ -39,9 +42,9 @@ The active application is in [`cse6242_project(frontend)/webpage`](cse6242_proje
 
 ## Try the live preview
 
-**[Open the one-click interactive preview](https://scholar-compass-preview-aimee.bestflint2.chatgpt.site/)** — no setup or account required. It uses fictional advisor profiles and runs entirely in the browser.
+**[Open the one-click interactive preview](https://aimee-rh.github.io/scholar-compass/)** — no setup or account required. It uses fictional advisor profiles and runs entirely in the browser.
 
-The [collaboration network example](https://scholar-compass-preview-aimee.bestflint2.chatgpt.site/network/) is a separate static D3 visualization using a small historical sample from the project's research data. It is distinct from the fictional advisor preview.
+The [research insights gallery](https://aimee-rh.github.io/scholar-compass/insights/) includes four interactive views: a D3 collaboration network plus publication venue, publication mix, and yearly trend charts. These use bundled historical project data and are distinct from the fictional advisor preview.
 
 The deployed static preview is saved in [`preview-static/`](preview-static/). It is a self-contained export of the Flask preview UI; edits to the Flask app do not automatically update the deployed site.
 
